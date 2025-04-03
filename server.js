@@ -6,15 +6,12 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
 
-// Serve static files from the "public" directory
 app.use(express.static('public'));
 
-// Serve index.html when the root URL is requested
 app.get('/', (req, res) => {
     res.sendFile(__dirname + '/index.html');
 });
 
-// Players store
 let players = {};
 
 io.on('connection', (socket) => {
@@ -35,18 +32,15 @@ io.on('connection', (socket) => {
     socket.on('button-press', (data) => {
         console.log(`${data.playerId} pressed ${data.button}`);
 
-        // Broadcast to all clients that a player pressed a button
         io.emit('button-pressed', data);
     });
 
 
     socket.on('player-move', (data) => {
-        // Update the player's position
         if (players[data.playerId]) {
             players[data.playerId].x = data.x;
             players[data.playerId].y = data.y;
             
-            // Broadcast the updated position to all clients
             socket.broadcast.emit('player-move', {
                 playerId: data.playerId,
                 x: data.x,
