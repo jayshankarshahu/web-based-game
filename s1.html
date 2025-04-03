@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phaser Game</title>
+
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.88.2/phaser.js"></script> -->
+    <script src="https://cdn.jsdelivr.net/npm/phaser@v3.88.2/dist/phaser.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+
+</head>
+<body>
+    <script>
+        let player;
+        let cursors;
+        let socket;
+        let otherPlayers = {};
+        
+        username = prompt("Enter your username");
+        let w = 1200;
+        let h = 800;
+        
+        let config = {
+            type: Phaser.AUTO,
+            width: w,
+            height: h,
+            physics: {
+                default: 'arcade',
+                arcade: {
+                    gravity: { y: 0 },
+                    debug: true
+                }
+            },
+            scene: {
+                preload: preload,
+                create: create,
+                update: update
+            }
+        };
+        
+        const game = new Phaser.Game(config);
+        
+        function preload() {
+            this.load.image('sky', 'https://media.istockphoto.com/id/527087859/photo/light-blue-sky-with-clouds.jpg?s=612x612&w=0&k=20&c=7D9brmwwyMSYseq1fjnJeyuWa83136hEvjY5MSy9_1M=');
+            this.load.image('character', 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2w...');
+        }
+        
+        function create() {
+            // Connect to the server
+            socket = io();
+        
+            // Create the player's sprite
+            player = this.physics.add.sprite(w / 2, h / 2, 'character');
+        
+            // Add keyboard inputs
+            cursors = this.input.keyboard.createCursorKeys();
+        
+            // Emit player movement to the server
+            socket.on('currentPlayers', (players) => {
+                for (let id in players) {
+                    if (id === socket.id) {
+                        continue;
+                    }
+                    // Create other players
+                    otherPlayers[id] = this.physics.add.sprite(players[id].x, players[id].y, 'character');
+                }
+            });
+        
+            // When a new player connects
+            socket.on('newPlayer', (playerData) => {
+                otherPlayers[playerData.id] = this.physics.add.sprite(playerData.x, playerData.y, 'character');
+            });
+        
+            // Update player position when others move
+            socket.on('playerMoved', (playerData) => {
+                if (otherPlayers[playerData.id]) {
+                    otherPlayers[playerData.id].setPosition(playerData.x, playerData.y);
+                }
+            });
+        
+            // Remove player when they disconnect
+            socket.on('playerDisconnected', (id) => {
+                if (otherPlayers[id]) {
+                    otherPlayers[id].destroy();
+                    delete otherPlayers[id];
+                }
+            });
+        }
+        
+        function update() {
+            // Player movement
+            if (cursors.left.isDown) {
+                player.x -= 5;
+            } else if (cursors.right.isDown) {
+                player.x += 5;
+            }
+        
+            if (cursors.up.isDown) {
+                player.y -= 5;
+            } else if (cursors.down.isDown) {
+                player.y += 5;
+            }
+        
+            // Emit player movement to the server
+            socket.emit('playerMovement', { x: player.x, y: player.y });
+        }
+        
+    </script>
+    
+    
+    
+    
+</body>
+</html>
