@@ -2,16 +2,17 @@
 ## How to Run 
 
 1. Clone the repository: 
-
-    ```sh git clone https://github.com/saurabhgithub11/game-.git 
+    ```sh 
+    git clone https://github.com/saurabhgithub11/game-.git 
     
 2. Navigate to the project directory: 
-    ```sh cd game- 
+    ```sh 
+    cd game- 
     
 3. Install dependencies: 
-
-    ```sh npm install 
+    ```sh 
+    npm install 
 
 4. start the server 
-
-    ```sh node server.js
+    ```sh 
+    node server.js
